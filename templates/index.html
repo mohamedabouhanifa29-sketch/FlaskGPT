@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="csrf-token" content="{{ csrf }}"><title>FlaskGPT · Conversations et données</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='tailwind.css') }}">
+<script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+<div class="max-w-7xl mx-auto p-4 md:p-8">
+<header class="mb-6 flex flex-wrap items-end justify-between gap-4">
+<div><p class="text-teal-300 text-xs tracking-widest">FLASKGPT / PROJECT-10</p><h1 class="text-3xl font-bold mt-2">Conversations & données</h1><p class="text-slate-400 mt-2">Explorer vos données, retrouver les preuves, suivre la qualité.</p></div>
+<div class="flex flex-wrap gap-2"><button id="new" class="bg-teal-700 rounded-lg px-4 py-3">＋ Nouvelle conversation</button><button id="reset" class="border border-red-800 text-red-300 rounded-lg px-4 py-3">Effacer et recommencer</button></div>
+</header>
+<p id="notice" role="status" aria-live="polite" class="text-amber-300 mb-4"></p>
+<section aria-label="Performance de la conversation" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+<div class="bg-slate-900 rounded-xl p-4"><p class="text-xs text-slate-400">Réponses terminées / requêtes</p><p id="metric-requests" class="text-2xl mt-2">—</p></div>
+<div class="bg-slate-900 rounded-xl p-4"><p class="text-xs text-slate-400">Durée moyenne</p><p id="metric-time" class="text-2xl mt-2">—</p></div>
+<div class="bg-slate-900 rounded-xl p-4"><p class="text-xs text-slate-400">Tokens connus · entrée / sortie</p><p id="metric-tokens" class="text-xl mt-2">—</p></div>
+<div class="bg-slate-900 rounded-xl p-4"><p class="text-xs text-slate-400">Couverture des mesures de tokens</p><p id="metric-coverage" class="text-2xl mt-2">—</p></div>
+</section>
+<div class="grid lg:grid-cols-3 gap-6">
+<aside class="space-y-5">
+<section class="bg-slate-900 rounded-xl p-4 space-y-3">
+<label for="history" class="block font-semibold">Historique</label><select id="history" class="w-full bg-slate-800 rounded-lg p-3"></select>
+<label for="domain" class="block font-semibold">Domaine de la conversation</label><select id="domain" class="w-full bg-slate-800 rounded-lg p-3"><option value="general">Général</option><option value="informatique">Informatique</option><option value="finance">Finance</option><option value="analyse_donnees">Analyse de données</option><option value="autre">Autre domaine</option></select>
+<p class="text-xs text-slate-400">Le domaine adapte le vocabulaire et la méthode des prochaines réponses.</p>
+</section>
+<section class="bg-slate-900 rounded-xl p-4 space-y-3">
+<h2 class="font-semibold">Sources à consulter</h2><p class="text-xs text-slate-400">PDF, TXT, CSV, XLSX · 8 Mio par fichier · 12 sources. Les passages sélectionnés et votre question seront envoyés à Groq.</p>
+<label for="file" class="block text-sm">Ajouter un document</label><input id="file" type="file" accept=".pdf,.txt,.csv,.xlsx" class="w-full text-sm"><button id="upload" class="bg-slate-700 rounded-lg px-3 py-2">Importer le document</button>
+<div id="documents" class="space-y-3"></div><p class="text-xs text-slate-400">Réglages pour les prochaines réponses. Maximum global : 24 passages et 24 000 caractères. Les preuves des anciennes réponses restent consultables.</p>
+</section>
+<section class="bg-slate-900 rounded-xl p-4 space-y-3">
+<h2 class="font-semibold">Téléchargements</h2><a id="summary" class="block text-teal-300 underline" href="#">Résumé de la conversation · PDF</a><p class="text-xs text-slate-400">Résumé extractif des 20 derniers messages.</p>
+<div class="flex flex-wrap gap-4"><a id="txt" class="text-teal-300 underline" href="#">TXT</a><a id="md" class="text-teal-300 underline" href="#">Markdown</a><a id="pdf" class="text-teal-300 underline" href="#">PDF complet</a><a id="json" class="text-teal-300 underline" href="#">JSON</a></div>
+</section>
+</aside>
+<main class="lg:col-span-2 space-y-6">
+<section aria-label="Conversation" class="space-y-4">
+<div id="messages" class="space-y-4" aria-label="Messages"></div>
+<form id="chat" class="bg-slate-900 rounded-xl p-4 space-y-3"><label for="message" class="block font-semibold">Votre question</label><textarea id="message" required maxlength="8000" rows="3" class="w-full bg-slate-800 rounded-xl p-3" placeholder="Que souhaitez-vous comprendre ?"></textarea><div class="flex gap-3"><button id="send" class="bg-teal-700 rounded-lg px-6 py-3">Envoyer</button><button id="stop" type="button" disabled class="bg-slate-700 rounded-lg px-6 py-3">Arrêter</button></div><p class="text-xs text-slate-400">Les citations permettent de retrouver les passages ; elles ne garantissent pas l’exactitude. Les notes colorées correspondent à votre avis.</p></form>
+</section>
+<details class="bg-slate-900 rounded-xl p-4" open><summary class="font-semibold cursor-pointer">Données & gouvernance</summary>
+<div class="space-y-4 mt-4">
+<p class="text-sm text-slate-400">Importez une copie SQLite, un CSV ou un XLSX. Les rapports de qualité restent locaux. La source de données est décochée par défaut ; cochez-la seulement si vous souhaitez envoyer des extraits à Groq avec vos questions.</p>
+<label for="dataset-file" class="block text-sm">Fichier de données · 8 Mio maximum</label><input id="dataset-file" type="file" accept=".db,.sqlite,.sqlite3,.csv,.xlsx" class="w-full text-sm"><button id="import-dataset" class="bg-teal-700 rounded-lg px-3 py-2">Importer et contrôler</button>
+<label for="dataset" class="block text-sm">Base à interroger</label><select id="dataset" class="w-full bg-slate-800 rounded-lg p-3"><option value="">Base configurée sur le serveur</option></select>
+<div id="governance" class="space-y-3"></div>
+<details><summary class="text-teal-300 cursor-pointer">Règles métier de contrôle (facultatif)</summary><div class="space-y-2 mt-2"><label for="rules" class="block text-sm">Règles JSON appliquées à chaque table de la base sélectionnée</label><textarea id="rules" rows="4" class="w-full bg-slate-800 p-3 rounded-lg text-sm" spellcheck="false">{"required": [], "types": {}, "ranges": {}}</textarea><p class="text-xs text-slate-400">Exemple : {"required":["email"],"types":{"age":"number"},"ranges":{"age":{"min":0,"max":120}}}</p><button id="profile" class="bg-slate-700 rounded-lg px-3 py-2">Appliquer les règles</button></div></details>
+<details><summary class="text-teal-300 cursor-pointer">Interroger les données en lecture seule</summary><div class="space-y-2 mt-2"><label for="sql" class="block text-sm">Requête SELECT</label><textarea id="sql" rows="3" class="w-full bg-slate-800 rounded-lg p-3 text-sm" placeholder="SELECT name FROM sqlite_master WHERE type='table'"></textarea><button id="query" class="bg-slate-700 rounded-lg px-3 py-2">Exécuter et ajouter comme source</button><pre id="db-result" class="text-xs whitespace-pre-wrap break-words max-h-72 overflow-auto"></pre></div></details>
+</div>
+</details>
+<details class="bg-slate-900 rounded-xl p-4"><summary class="font-semibold cursor-pointer">Comparer les réponses et la consommation</summary><p class="text-xs text-slate-400 mt-3">Mesures serveur, temps de génération et débit de sortie. Les tokens indisponibles ne sont pas remplacés par une estimation.</p><div class="overflow-x-auto mt-3"><table class="w-full text-xs text-left"><thead><tr><th class="p-2">Réponse</th><th class="p-2">Durée / premier token</th><th class="p-2">Entrée / sortie</th><th class="p-2">Tokens/s</th><th class="p-2">État / votre note</th></tr></thead><tbody id="performance"></tbody></table></div></details>
+</main>
+</div>
+</div>
+</body></html>

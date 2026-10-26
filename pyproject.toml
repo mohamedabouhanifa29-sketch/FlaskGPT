@@ -1,0 +1,29 @@
+[project]
+name = "flaskgpt"
+version = "1.0.0"
+description = "Assistant documentaire local Flask et Groq"
+authors = [{name = "FlaskGPT"}]
+requires-python = ">=3.11,<4.0"
+dependencies = [
+    "flask>=3.1,<4",
+    "groq>=0.30,<1",
+    "python-dotenv>=1,<2",
+    "pypdf>=6,<7",
+    "openpyxl>=3.1,<4",
+    "reportlab>=4.4,<5",
+    "waitress>=3,<4",
+]
+
+[tool.poetry]
+package-mode = false
+
+# PyCharm can launch through uv, which needs its own non-package setting.
+[tool.uv]
+package = false
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=8,<10"
+
+[build-system]
+requires = ["poetry-core>=2.0"]
+build-backend = "poetry.core.masonry.api"

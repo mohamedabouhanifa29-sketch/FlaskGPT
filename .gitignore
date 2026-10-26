@@ -1,0 +1,29 @@
+# Secrets et configuration locale
+.env
+.env.*
+!.env.example
+# Données et conversations
+instance/
+*.sqlite
+*.sqlite3
+*.sqlite-*
+*.sqlite3-*
+*.db
+*.db-*
+*.log
+# Environnements et outils
+.venv/
+node_modules/
+__pycache__/
+.pytest_cache/
+.idea/
+.local-docs/
+# Documentation et captures propres à cette installation
+MISE-A-JOUR.md
+VALIDATION.md
+preview.png
+streaming-live.png
+github-public.png
+# Anciens assets remplacés par static/script.js et static/tailwind.css
+static/css/
+static/dist/
